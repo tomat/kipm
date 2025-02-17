@@ -22,8 +22,7 @@ function cleanupTempDir() {
 
 program
   .name('kipm')
-  .description('KiCad component package manager')
-  .version('0.0.7');
+  .description('KiCad component package manager');
 
 // Default action for root command (install all from components.txt)
 program
