@@ -1,6 +1,6 @@
 {
   "name": "kipm",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "KiCad component package manager",
   "main": "cli.js",
   "bin": {
@@ -8,6 +8,10 @@
   },
   "scripts": {
     "kipm": "node cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tomat/kipm"
   },
   "keywords": [
     "kicad"
