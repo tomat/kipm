@@ -27,7 +27,7 @@ npm install -g kipm
 kipm install <LCSC-component-id>
 ```
 
-### Install multiple components
+### Install multiple components (recommended)
 Create a `components.txt` file in your project root with one LCSC part number per line:
 
 ```txt
@@ -39,14 +39,10 @@ Then from your project directory run:
 ```bash
 npx -y kipm
 ```
-or
-```bash
-npx -y kipm install
-```
 
 ## What it does
 
-When you run kipm in a project named `my-board`, it creates:
+When you run `kipm` in a project named `my-board` which has a `components.txt` file, it creates:
 - `my-board.kicad_sym` - Symbol library
 - `my-board.pretty/` - Footprint library
 - `my-board.3dshapes/` - 3D model files
@@ -58,11 +54,6 @@ It also updates:
 
 The libraries are named after your project directory and will be "starred" so they appear at the top when placing components in KiCad.
 
-## Requirements
-- KiCad 6.0 or later
-- Node.js 14 or later
-- Works on Windows, macOS, and Linux
-
 ## Example Workflow
 1. Create a new KiCad project
 2. Create a `components.txt` file with your LCSC part numbers
@@ -70,7 +61,7 @@ The libraries are named after your project directory and will be "starred" so th
 4. Open your schematic - the components will be available in the project library
 
 ## Issues and Bugs
-Please report any issues on the [GitHub issue tracker](https://github.com/yourusername/kipm/issues).
+Please report any issues on the [GitHub issue tracker](https://github.com/tomat/kipm/issues).
 
 ## License
 
