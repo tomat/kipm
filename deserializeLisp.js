@@ -20,8 +20,39 @@ function deserializeLisp(input) {
         return ws;
     }
 
+    function readString() {
+        let str = '"';
+        pos++; // Skip opening quote
+        
+        while (pos < len && input[pos] !== '"') {
+            // Handle escape sequences
+            if (input[pos] === '\\' && pos + 1 < len) {
+                str += input[pos];
+                pos++;
+                str += input[pos];
+                pos++;
+            } else {
+                str += input[pos];
+                pos++;
+            }
+        }
+        
+        if (pos < len && input[pos] === '"') {
+            str += '"';
+            pos++; // Skip closing quote
+        }
+        
+        return str;
+    }
+
     function readToken() {
         let token = '';
+        
+        // Handle strings specially
+        if (input[pos] === '"') {
+            return readString();
+        }
+        
         while (pos < len && !isWhitespace(input[pos]) && input[pos] !== '(' && input[pos] !== ')') {
             token += input[pos];
             pos++;
