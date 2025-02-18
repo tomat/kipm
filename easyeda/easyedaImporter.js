@@ -1,4 +1,5 @@
 // easyeda_importer.js
+const OBJFile = require('obj-file-parser');
 
 const { EasyedaApi } = require("./easyedaApi");
 const {
@@ -252,6 +253,24 @@ class EasyedaFootprintImporter {
             new_ee_footprint.model_3d = await new_ee_footprint.model_3d.create_3d_model();
         }
 
+        console.log('');
+        console.log('');
+        console.log('Step 3');
+        console.log('------');
+        console.log('Variable: "ee_data_str", in easyedaImporter.js');
+        console.log('Source: ee_data_str.head');
+
+        console.log(JSON.stringify(
+            {
+                'ee_data_str.head.x': ee_data_str.head.x,
+                'ee_data_str.head.y': ee_data_str.head.y,
+                'is_smd': is_smd,
+            },
+            null,
+            2
+        ));
+
+
         return new_ee_footprint;
     }
 }
@@ -276,7 +295,106 @@ class Easyeda3dModelImporter {
                 const api = new EasyedaApi();
                 model_3d.raw_obj = await api.getRaw3dModelObj(model_3d.uuid);
                 model_3d.step = await api.getStep3dModel(model_3d.uuid);
+
+                // EasyEda transform test
+                if (false) {
+                    const isSMD = this.input.SMT;
+
+                    const objFile = new OBJFile(model_3d.raw_obj);
+                    const output = objFile.parse();
+
+                    // Calculate bbox from parsed vertices
+                    const vertices = output.models[0].vertices;
+                    const boundingBox = vertices.reduce((acc, vertex) => ({
+                        maxX: Math.max(acc.maxX, vertex.x),
+                        maxY: Math.max(acc.maxY, vertex.y),
+                        maxZ: Math.max(acc.maxZ, vertex.z),
+                        minX: Math.min(acc.minX, vertex.x),
+                        minY: Math.min(acc.minY, vertex.y),
+                        minZ: Math.min(acc.minZ, vertex.z)
+                    }), {
+                        maxX: -Infinity,
+                        maxY: -Infinity,
+                        maxZ: -Infinity,
+                        minX: Infinity,
+                        minY: Infinity,
+                        minZ: Infinity
+                    });
+
+
+                    // Step 1: Calculate center point for centering transformation
+                    const centerX = (boundingBox.maxX + boundingBox.minX) / 2;
+                    const centerY = (boundingBox.maxY + boundingBox.minY) / 2;
+                    const centerZ = boundingBox.minZ;
+
+                    // Step 4: Z offset calculation based on bbox dimensions
+                    // Calculate the scaling factor based on width/height ratio
+                    const width = boundingBox.maxX - boundingBox.minX;
+                    const height = boundingBox.maxY - boundingBox.minY;
+
+
+                    console.log('c_width:', model_3d_info.c_width);
+                    console.log('c_width_mm:', model_3d_info.c_width / 3.937);
+                    console.log('c_height:', model_3d_info.c_height / 3.937);
+                    console.log('c_origin:', model_3d_info.c_origin);
+                    console.log('z:', model_3d_info.z);
+                    console.log('-----');
+                    console.log('calculated width:', width);
+                    console.log('calculated height:', height);
+
+
+                    const scaleFactor = Math.min(width / (boundingBox.maxX - boundingBox.minX),
+                        height / (boundingBox.maxY - boundingBox.minY));
+
+                    // Calculate zOffsetMils based on the bbox's z-dimension and scale factor
+                    const zOffsetMils = -boundingBox.minZ * scaleFactor;
+                    const zOffsetMm = zOffsetMils / 3.937007874;
+
+                    // Calculate final transformations
+                    const transformation = {
+                        x: parseFloat((-centerX).toFixed(3)),
+                        y: parseFloat((-centerY).toFixed(3)),
+                        z: isSMD ?
+                            parseFloat((-centerZ + zOffsetMm).toFixed(3)) :
+                            parseFloat((-centerZ).toFixed(3))
+                    };
+
+                    // Log the calculations
+                    console.log('\nBounding Box:', boundingBox);
+                    console.log('Step 1 - Center point:', {
+                        x: centerX.toFixed(3),
+                        y: centerY.toFixed(3),
+                        z: centerZ.toFixed(3)
+                    });
+                    console.log('Step 4 - Position offset:', {
+                        zOffsetMils: zOffsetMils,
+                        zOffsetMm: zOffsetMm.toFixed(3)
+                    });
+
+                    console.log('Final transformation values:', transformation);
+                    console.log('');
+                }
+
             }
+            console.log('Step 2 - translation values on model_3d:', );
+
+            console.log('');
+            console.log('');
+            console.log('Step 2');
+            console.log('------');
+            console.log('Variable: "model_3d", in easyedaImporter.js');
+            console.log('Source: "info" variable from step 1');
+
+            console.log(JSON.stringify(
+                {
+                    'model_3d.translation.x': model_3d.translation.x,
+                    'model_3d.translation.y': model_3d.translation.y,
+                    'model_3d.translation.z': model_3d.translation.z
+                },
+                null,
+                2
+            ));
+
             return model_3d;
         }
         console.warn("No 3D model available for this component");
@@ -295,6 +413,25 @@ class Easyeda3dModelImporter {
     }
 
     parse_3d_model_info(info) {
+        console.log('');
+        console.log('');
+        console.log('Step 1');
+        console.log('------');
+        console.log('Variable: "info", in easyedaImporter.js');
+        console.log('Source: from input.packageDetail.dataStr.shape (SVGNODE~{"gId":"g1_outline"[...])');
+
+        console.log(JSON.stringify(
+            {
+                'info.c_origin[0]': info.c_origin.split(',')[0],
+                'info.c_origin[1]': info.c_origin.split(',')[1],
+                'info.z': info.z,
+                'info.c_width': info.c_width,
+                'info.c_height': info.c_height
+            },
+            null,
+            2
+        ));
+
         return new Ee3dModel({
             name: info.title,
             uuid: info.uuid,

@@ -271,9 +271,16 @@ class ExporterFootprintKicad {
             fp_type: infoData.fp_type,
         });
 
+
         let ki_3d_model_info = null;
         if (this.input.model_3d !== null && this.input.model_3d !== undefined) {
             this.input.model_3d.convert_to_mm();
+
+            console.log('');
+            console.log('');
+            console.log('Step 4');
+            console.log('------');
+            console.log('Need to fix offset here...');
 
             ki_3d_model_info = new Ki3dModel({
                 name: this.input.model_3d.name,
