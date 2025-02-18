@@ -27,6 +27,7 @@ const { Exporter3dModelKicad } = require("./kicad/exportKicad3dmodel");
 const { ExporterFootprintKicad } = require("./kicad/exportKicadFootprint");
 const { ExporterSymbolKicad } = require("./kicad/exportKicadSymbol");
 const { KicadVersion } = require("./kicad/parametersKicadSymbol");
+const homeDir = require("os").homedir();
 
 // -------------------- Argument Parser --------------------
 
@@ -140,7 +141,6 @@ function validArguments(args) {
         }
     } else {
         // Default folder: ~/Documents/Kicad/easyeda2kicad
-        const homeDir = require("os").homedir();
         baseFolder = path.join(homeDir, "Documents", "Kicad", "easyeda2kicad");
         if (!fs.existsSync(baseFolder)) {
             fs.mkdirSync(baseFolder, { recursive: true });
