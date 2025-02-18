@@ -48,9 +48,10 @@ When you run `kipm` in a project named `my-board` which has a `components.txt` f
 - `my-board.3dshapes/` - 3D model files
 
 It also updates:
-- `sym-lib-table` - Adds and stars the symbol library
-- `fp-lib-table` - Adds and stars the footprint library
+- `sym-lib-table` - Adds the symbol library
+- `fp-lib-table` - Adds the footprint library
 - `components.json` - Tracks installed components to enable clean uninstallation
+- `my-board.kicad_pro` - Stars the libraries
 
 The libraries are named after your project directory and will be "starred" so they appear at the top when placing components in KiCad.
 
