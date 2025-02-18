@@ -238,10 +238,16 @@ class EasyedaFootprintImporter {
                 const data = zip(EeFootprintText.fields, ee_fields);
                 new_ee_footprint.texts.push(new EeFootprintText(data));
             } else if (ee_designator === "SVGNODE") {
+                /*
+                Is this needed? 3d model are downloaded separately...
+
                 new_ee_footprint.model_3d = new Easyeda3dModelImporter(
                     { packageDetail: { dataStr: { shape: [line] } } },
                     false
                 );
+                const a = 1;
+
+                */
             } else if (ee_designator === "SOLIDREGION") {
                 // Not implemented
             } else {
@@ -249,9 +255,13 @@ class EasyedaFootprintImporter {
             }
         });
 
+        /*
+        removing this for now. footprint shouldnt need its own copy of the 3d model, injecting main 3d model in main thread instead
         if (new_ee_footprint.model_3d) {
             new_ee_footprint.model_3d = await new_ee_footprint.model_3d.create_3d_model();
         }
+        */
+
 
         console.log('');
         console.log('');
@@ -278,23 +288,18 @@ class EasyedaFootprintImporter {
 // -------------------- EasyEDA 3D Model Importer --------------------
 
 class Easyeda3dModelImporter {
-    constructor(easyedaCpCadData, downloadRaw3dModel) {
-        this.input = easyedaCpCadData;
-        this.downloadRaw3dModel = downloadRaw3dModel;
+    constructor(lcscComponent) {
+        this.lcscComponent = lcscComponent;
+        this.downloadRaw3dModel = true;
     }
 
     async create_3d_model() {
-        const ee_data =
-            typeof this.input === "object" && !Array.isArray(this.input)
-                ? this.input.packageDetail.dataStr.shape
-                : this.input;
-        const model_3d_info = this.get_3d_model_info(ee_data);
+        const model_3d_info = this.lcscComponent.get3DModelInfo();
         if (model_3d_info) {
             const model_3d = this.parse_3d_model_info(model_3d_info);
             if (this.downloadRaw3dModel) {
-                const api = new EasyedaApi();
-                model_3d.raw_obj = await api.getRaw3dModelObj(model_3d.uuid);
-                model_3d.step = await api.getStep3dModel(model_3d.uuid);
+                model_3d.raw_obj = this.lcscComponent.get3dRawObj();
+                model_3d.step = this.lcscComponent.get3dStep();
 
                 // EasyEda transform test
                 if (false) {

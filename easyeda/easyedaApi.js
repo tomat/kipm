@@ -41,6 +41,11 @@ class EasyedaApi {
         if (Object.keys(cpCadInfo).length === 0) {
             return {};
         }
+
+        if (!cpCadInfo["result"] || Object.keys(cpCadInfo["result"]).length === 0) {
+            throw new Error(`Failed to fetch data from EasyEDA API for part ${lcsc_id}`);
+        }
+
         return cpCadInfo["result"];
     }
 

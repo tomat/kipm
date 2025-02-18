@@ -234,7 +234,8 @@ function rotate(x, y, degrees) {
 
 // ExporterFootprintKicad class
 class ExporterFootprintKicad {
-    constructor(footprint) {
+    constructor(footprint, model_3d) {
+        this.model_3d = model_3d;
         this.input = footprint;
         if (!(this.input instanceof ee_footprint)) {
             console.error("Unsupported conversion");
@@ -273,8 +274,8 @@ class ExporterFootprintKicad {
 
 
         let ki_3d_model_info = null;
-        if (this.input.model_3d !== null && this.input.model_3d !== undefined) {
-            this.input.model_3d.convert_to_mm();
+        if (this.model_3d !== null && this.model_3d !== undefined) {
+            this.model_3d.convert_to_mm();
 
             console.log('');
             console.log('');
@@ -283,23 +284,23 @@ class ExporterFootprintKicad {
             console.log('Need to fix offset here...');
 
             ki_3d_model_info = new Ki3dModel({
-                name: this.input.model_3d.name,
+                name: this.model_3d.name,
                 translation: new Ki3dModelBase({
                     x: parseFloat(
-                        (this.input.model_3d.translation.x - this.input.bbox.x).toFixed(2)
+                        (this.model_3d.translation.x - this.input.bbox.x).toFixed(2)
                     ),
                     y: -parseFloat(
-                        (this.input.model_3d.translation.y - this.input.bbox.y).toFixed(2)
+                        (this.model_3d.translation.y - this.input.bbox.y).toFixed(2)
                     ),
                     z:
                         this.input.info && this.input.info.fp_type === "smd"
-                            ? -parseFloat(this.input.model_3d.translation.z.toFixed(2))
+                            ? -parseFloat(this.model_3d.translation.z.toFixed(2))
                             : 0,
                 }),
                 rotation: new Ki3dModelBase({
-                    x: (360 - this.input.model_3d.rotation.x) % 360,
-                    y: (360 - this.input.model_3d.rotation.y) % 360,
-                    z: (360 - this.input.model_3d.rotation.z) % 360,
+                    x: (360 - this.model_3d.rotation.x) % 360,
+                    y: (360 - this.model_3d.rotation.y) % 360,
+                    z: (360 - this.model_3d.rotation.z) % 360,
                 }),
                 raw_wrl: null,
             });

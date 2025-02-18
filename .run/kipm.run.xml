@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="kipm" type="NodeJSConfigurationType" path-to-js-file="../cli.js" working-dir="$PROJECT_DIR$/example-kicad-project">
+  <configuration default="false" name="kipm" type="NodeJSConfigurationType" path-to-js-file="../cli.js " working-dir="$PROJECT_DIR$/example-kicad-project">
     <method v="2" />
   </configuration>
 </component>
