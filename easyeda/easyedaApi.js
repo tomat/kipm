@@ -1,8 +1,6 @@
 // easyeda_api.js
 
-// If using Node 18+ you can use the built-in fetch. Otherwise, install and require node-fetch:
-// const fetch = require('node-fetch');
-const fetch = global.fetch || require("node-fetch");
+const fetch = global.fetch;
 
 // Import version from your package or module (adjust the path as needed)
 const __version__ = '1.0.0';
