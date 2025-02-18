@@ -1,5 +1,3 @@
-// === Global Imports ===
-// Adjust the relative paths as needed for your project structure.
 const {
     EasyedaPinType,
     EeSymbol,
@@ -13,13 +11,9 @@ const {
     EeSymbolPolyline,
     EeSymbolRectangle
 } = require("../easyeda/parametersEasyeda");
-
 const { SvgPathEllipticalArc, SvgPathMoveTo } = require("../easyeda/svgPathParser");
-
-const { getMiddleArcPos } = require("../helpers");
-
+const { getMiddleArcPos } = require("../arcUtils");
 const { computeArc } = require("./exportKicadFootprint");
-
 const {
     KiPinType,
     KiPinStyle,
