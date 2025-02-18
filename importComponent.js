@@ -13,7 +13,7 @@ const getImportedFiles = require('./getImportedFiles');
 const { convertEasyedaToKicad } = require('./easyeda2kicadCore');
 const { KicadVersion } = require('./kicad/parametersKicadSymbol');
 
-async function importComponent(projectName, projectDir, lcscId, baseDir) {
+async function importComponent(projectName, projectDir, lcscId, baseDir, dryRun = false) {
   const projectPath = path.join(baseDir, projectDir);
   const importTmpPath = path.join(baseDir, '.kipm-tmp');
   const projectSymPath = path.join(projectPath, `${projectName}.kicad_sym`);
@@ -26,9 +26,9 @@ async function importComponent(projectName, projectDir, lcscId, baseDir) {
   }
 
   // Create .import-tmp directory if it doesn't exist
-  if (!fs.existsSync(importTmpPath)) {
+  if (!fs.existsSync(importTmpPath) && !dryRun) {
     fs.mkdirSync(importTmpPath);
-  } else {
+  } else if (!dryRun) {
     // Clear all files in .import-tmp directory
     const files = fs.readdirSync(importTmpPath);
     for (const file of files) {
@@ -46,13 +46,13 @@ async function importComponent(projectName, projectDir, lcscId, baseDir) {
 
   // If project sym file exists, copy it to .import-tmp/.kicad_sym
   // Otherwise create a new one with proper header
-  if (fs.existsSync(projectSymPath)) {
+  if (fs.existsSync(projectSymPath) && !dryRun) {
     try {
       fs.copyFileSync(projectSymPath, importTmpSymPath);
     } catch (err) {
       throw new Error(`Error copying symbol file: ${err.message}`);
     }
-  } else {
+  } else if (!dryRun) {
     // Create new symbol lib file with header
     const header = dedent(`
       (kicad_symbol_lib
@@ -71,7 +71,7 @@ async function importComponent(projectName, projectDir, lcscId, baseDir) {
     });
 
     // Write symbol to temp file
-    if (convertedComponent.symbol) {
+    if (convertedComponent.symbol && !dryRun) {
       // Read the file as a Buffer.
       let libData = fs.readFileSync(importTmpSymPath);
       // Remove the last two bytes (assumes these are "\n)" in UTF-8).
@@ -92,7 +92,7 @@ async function importComponent(projectName, projectDir, lcscId, baseDir) {
     }
 
     // Write footprint to temp directory
-    if (convertedComponent.footprint) {
+    if (convertedComponent.footprint && !dryRun) {
       const prettyDir = path.join(importTmpPath, '.pretty');
       if (!fs.existsSync(prettyDir)) {
         fs.mkdirSync(prettyDir);
@@ -104,7 +104,7 @@ async function importComponent(projectName, projectDir, lcscId, baseDir) {
     }
 
     // Write 3D model to temp directory
-    if (convertedComponent.model3d) {
+    if (convertedComponent.model3d && !dryRun) {
       const shapesDir = path.join(importTmpPath, '.3dshapes');
       if (!fs.existsSync(shapesDir)) {
         fs.mkdirSync(shapesDir);
@@ -141,35 +141,37 @@ async function importComponent(projectName, projectDir, lcscId, baseDir) {
       modelCount = fs.readdirSync(shapesDir).filter(f => f.endsWith('.wrl')).length;
     }
 
-    // Copy .wrl files from .import-tmp/.3dshapes to project.3dshapes
-    copyWrlFiles(importTmpPath, projectPath, projectName);
-    
-    // Copy and update .kicad_mod files from .import-tmp/.pretty to project.pretty
-    copyAndUpdateFootprintFiles(importTmpPath, projectPath, projectName);
-    
-    // Read the generated symbol file
-    const symContent = fs.readFileSync(importTmpSymPath, 'utf8');
-    
-    // Update only footprint paths in the content
-    const updatedContent = updateFootprintPath(symContent, projectName);
-    
-    // Write the updated content back to the file
-    fs.writeFileSync(importTmpSymPath, updatedContent);
-    
-    // Copy back the modified .kicad_sym file
-    fs.copyFileSync(importTmpSymPath, projectSymPath);
+    if (!dryRun) {
+      // Copy .wrl files from .import-tmp/.3dshapes to project.3dshapes
+      copyWrlFiles(importTmpPath, projectPath, projectName);
+      
+      // Copy and update .kicad_mod files from .import-tmp/.pretty to project.pretty
+      copyAndUpdateFootprintFiles(importTmpPath, projectPath, projectName);
+      
+      // Read the generated symbol file
+      const symContent = fs.readFileSync(importTmpSymPath, 'utf8');
+      
+      // Update only footprint paths in the content
+      const updatedContent = updateFootprintPath(symContent, projectName);
+      
+      // Write the updated content back to the file
+      fs.writeFileSync(importTmpSymPath, updatedContent);
+      
+      // Copy back the modified .kicad_sym file
+      fs.copyFileSync(importTmpSymPath, projectSymPath);
 
-    // Update project libraries
-    updateProjectLibraries(projectPath, projectName);
+      // Update project libraries
+      updateProjectLibraries(projectPath, projectName);
 
-    // Update fp-lib-table
-    updateFpLibTable(projectPath, projectName);
+      // Update fp-lib-table
+      updateFpLibTable(projectPath, projectName);
 
-    // Update sym-lib-table
-    updateSymLibTable(projectPath, projectName);
+      // Update sym-lib-table
+      updateSymLibTable(projectPath, projectName);
 
-    // Update components.json with the imported component and its files
-    await updateComponentsJson(projectPath, lcscId, importedFiles);
+      // Update components.json with the imported component and its files
+      await updateComponentsJson(projectPath, lcscId, importedFiles);
+    }
 
     // Return the result
     return {

@@ -22,11 +22,12 @@ function cleanupTempDir() {
 
 program
   .name('kipm')
-  .description('KiCad component package manager');
+  .description('KiCad component package manager')
+  .option('--dry-run', 'Run without making any changes to files');
 
 // Default action for root command (install all from components.txt)
 program
-  .action(async () => {
+  .action(async (options) => {
     const baseDir = process.cwd();
     const projectName = path.basename(baseDir);
 
@@ -37,14 +38,14 @@ program
     }
 
     try {
-      await installFromComponentsFile(projectName, '.', baseDir);
-      // console.log('Successfully installed all components');
+      if (options.dryRun) {
+        console.log('Dry run: No files will be modified');
+      }
+      await installFromComponentsFile(projectName, '.', baseDir, options.dryRun);
       cleanupTempDir();
     } catch (error) {
       console.error(`Error installing components: ${error.message}`);
-
       cleanupTempDir();
-
       process.exit(1);
     }
   });
@@ -53,9 +54,13 @@ program
 program
   .command('install [component]')
   .description('Install all components from components.txt or install a specific component')
-  .action(async (component) => {
+  .action(async (component, options) => {
     const baseDir = process.cwd();
     const projectName = path.basename(baseDir);
+
+    if (program.opts().dryRun) {
+      console.log('Dry run: No files will be modified');
+    }
 
     if (!component) {
       // Install all components from components.txt
@@ -65,8 +70,7 @@ program
       }
 
       try {
-        await installFromComponentsFile(projectName, '.', baseDir);
-        // console.log('Successfully installed all components');
+        await installFromComponentsFile(projectName, '.', baseDir, program.opts().dryRun);
         cleanupTempDir();
       } catch (error) {
         console.error(`Error installing components: ${error.message}`);
@@ -76,8 +80,7 @@ program
     } else {
       // Install specific component
       try {
-        await importComponent(projectName, '.', component, baseDir);
-        // console.log(`Successfully installed component: ${component}`);
+        await importComponent(projectName, '.', component, baseDir, program.opts().dryRun);
         cleanupTempDir();
       } catch (error) {
         console.error(`Error installing component: ${error.message}`);

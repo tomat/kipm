@@ -4,9 +4,11 @@ const importComponent = require('./importComponent');
 const cleanupComponents = require('./cleanupComponents');
 const { createSpinner } = require('./spinnerUtil');
 
-async function installFromComponentsFile(projectName, projectDir, baseDir) {
+async function installFromComponentsFile(projectName, projectDir, baseDir, dryRun = false) {
   // First, clean up any components that are no longer needed
-  await cleanupComponents(projectName, projectDir, baseDir);
+  if (!dryRun) {
+    await cleanupComponents(projectName, projectDir, baseDir);
+  }
 
   const componentsPath = path.join(baseDir, projectDir, 'components.txt');
   
@@ -21,9 +23,9 @@ async function installFromComponentsFile(projectName, projectDir, baseDir) {
     .filter(line => line && !line.startsWith('#')); // Skip empty lines and comments
 
   for (const lcscId of lcscIds) {
-    const spinner = createSpinner(`Installing ${lcscId}...`);
+    const spinner = createSpinner(`${dryRun ? '[DRY RUN] ' : ''}Installing ${lcscId}...`);
     try {
-      const result = await importComponent(projectName, projectDir, lcscId, baseDir);
+      const result = await importComponent(projectName, projectDir, lcscId, baseDir, dryRun);
       if (result) {
         spinner.succeed(lcscId, {
           symbolName: result.symbolName,
