@@ -1,0 +1,42 @@
+            x       y       z       rx      ry      rz
+            ------------------------------------------
+C347421     -1.15                                   90
+C11745              0.3     -3.5
+C411012     -0.3                                    180
+C18077846           3.5     -3.4
+
+
+Wrong alignment
+---------------
+C188061
+C347421
+C29582871
+C2913361
+C22388504
+C22388510
+C29778570
+C6674811
+C7462174
+C320963
+C1358156
+C29778567
+C2888165
+C20032242
+C5834115
+C530531
+C7541360
+C2763305
+
+
+
+Too wide footprint lines
+------------------------
+C22388510
+
+Errors
+------
+❌  Failed to install C6676938 - Cannot read properties of undefined (reading 'split')
+❌  Failed to install C2881836 - Cannot read properties of undefined (reading 'split')
+❌  Failed to install C22260980 - parse_svg_path is not a function
+❌  Failed to install C22388507 - Cannot read properties of undefined (reading 'split')
+❌  Failed to install C46107 - parse_svg_path is not a function
