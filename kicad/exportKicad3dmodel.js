@@ -105,18 +105,6 @@ function getVertices(objData) {
                       return ((+num).toFixed(1));
                   }
 
-                  const fin = (new Decimal(coord / 2.54)).toDP(4, Decimal.ROUND_HALF_EVEN).toString();
-
-                  if (false && fin === '-5.624') {
-                      console.log({ s: (coords[0] / 2.54).toFixed(4), coord, num: num.toString(), roundedNum,
-                          test: (coord / 2.54).toFixed(4),
-                          test2: new Decimal(coord / 2.54).toFixed(4, Decimal.ROUND_HALF_EVEN),
-                          test3: numDec.toDP(4, Decimal.ROUND_HALF_EVEN),
-                          test4: pythonRound(coord / 2.54, 4),
-                          test5: new Decimal(coord).div(new Decimal(2.54)).toFixed(4, Decimal.ROUND_HALF_EVEN),
-                      });
-                  }
-
                   return pythonRound(coord / 2.54, 4);
               }
               const numDec = new Decimal(coord / 2.54);
@@ -135,13 +123,6 @@ function getVertices(objData) {
 
               if (+coord < 0 && +res === 0) {
                   return '-0.0';
-              }
-
-              if (false && res.toString() === '-5.624') {
-                  console.log({ s: (coords[0] / 2.54).toFixed(4), coord,
-                      res,
-                      test4: pythonRound(coord / 2.54, 4),
-                  });
               }
 
               return res;
