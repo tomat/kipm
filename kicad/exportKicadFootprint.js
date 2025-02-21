@@ -550,6 +550,8 @@ class ExporterFootprintKicad {
             ki_text.mirror = ki_text.layers.startsWith("B") ? " mirror" : "";
             this.output.texts.push(ki_text);
         });
+
+        // calculate the bounding box for the footprint here
     }
 
     getKiFootprint() {
@@ -637,6 +639,12 @@ class ExporterFootprintKicad {
                 rot_z: ki.model_3d.rotation.z,
             });
         }
+
+        ki_lib += `(fp_rect (start 9.92 10) (end -4.18 -10)
+  (stroke (width 0.05) (type default))
+  (fill no)
+  (layer "F.CrtYd" )
+  (uuid "b62531b9-691b-4056-b99c-84be0a2405a1"))`;
 
         ki_lib += KI_END_FILE;
 
