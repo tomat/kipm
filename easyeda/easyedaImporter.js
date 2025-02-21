@@ -264,24 +264,6 @@ class EasyedaFootprintImporter {
         */
 
 
-        console.log('');
-        console.log('');
-        console.log('Step 3');
-        console.log('------');
-        console.log('Variable: "ee_data_str", in easyedaImporter.js');
-        console.log('Source: ee_data_str.head');
-
-        console.log(JSON.stringify(
-            {
-                'ee_data_str.head.x': ee_data_str.head.x,
-                'ee_data_str.head.y': ee_data_str.head.y,
-                'is_smd': is_smd,
-            },
-            null,
-            2
-        ));
-
-
         return new_ee_footprint;
     }
 }
