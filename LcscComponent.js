@@ -5,6 +5,7 @@ const {ExporterSymbolKicad} = require("./kicad/exportKicadSymbol");
 const {EasyedaFootprintImporter, Easyeda3dModelImporter} = require("./easyeda/easyedaImporter");
 const {ExporterFootprintKicad} = require("./kicad/exportKicadFootprint");
 const {Exporter3dModelKicad} = require("./kicad/exportKicad3dmodel");
+const { Ki3dModelBase } = require("./kicad/parametersKicadFootprint");
 
 class LcscComponent {
     constructor(lcscId, kicadVersion, footprintLibName) {
@@ -19,6 +20,11 @@ class LcscComponent {
             '3dRawObj': null,
             '3dStep': null,
         };
+        this.translation = new Ki3dModelBase({
+            x: 0,
+            y: 0,
+            z: 0,
+        });
     }
 
     getId() {
@@ -96,7 +102,7 @@ class LcscComponent {
 
     async createExporterFootprintKicad() {
         const f = await this.createEasyedaFootprint();
-        return new ExporterFootprintKicad(f, await this.create3dModel());
+        return new ExporterFootprintKicad(f, await this.create3dModel(), this.translation);
     }
 
     async createFootprintResult() {

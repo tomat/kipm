@@ -409,8 +409,9 @@ class Easyeda3dModelImporter {
                 console.log("Rotation (degrees, x, y, z):");
                 console.log(`x: ${rotationDegrees.x.toFixed(2)}, y: ${rotationDegrees.y.toFixed(2)}, z: ${rotationDegrees.z.toFixed(2)}`);
 
-                const a = 1;
-
+                this.lcscComponent.translation.x += +translation[0].toFixed(2);
+                this.lcscComponent.translation.y += +translation[1].toFixed(2);
+                this.lcscComponent.translation.z += +translation[2].toFixed(2);
             }
 
             return model_3d;

@@ -4,7 +4,7 @@
 const { acos, cos, sin, sqrt, PI } = Math;
 
 // Import required EasyEDA and KiCad models and constants
-const { ee_footprint } = require("../easyeda/parametersEasyeda");
+const { ee_footprint, convertToMm } = require("../easyeda/parametersEasyeda");
 
 const {
     KiFootprintInfo,
@@ -32,7 +32,7 @@ const {
     KI_ARC,
     KI_TEXT,
     KI_MODEL_3D,
-    KI_END_FILE,
+    KI_END_FILE, KI_RECT,
 } = require("./parametersKicadFootprint");
 
 const { KI_PAD_SHAPE, KI_PAD_LAYER, KI_PAD_LAYER_THT, KI_LAYERS } = require("./parametersKicadFootprint");
@@ -234,9 +234,10 @@ function rotate(x, y, degrees) {
 
 // ExporterFootprintKicad class
 class ExporterFootprintKicad {
-    constructor(footprint, model_3d) {
+    constructor(footprint, model_3d, translation) {
         this.model_3d = model_3d;
         this.input = footprint;
+        this.translation = translation;
         if (!(this.input instanceof ee_footprint)) {
             console.error("Unsupported conversion");
         } else {
@@ -279,20 +280,18 @@ class ExporterFootprintKicad {
 
             // @todo console.log(' Need to fix offset here...');
 
+            // Old easyeda2kicad z calculation:
+            // z: this.input.info && this.input.info.fp_type === "smd" ? -parseFloat(this.model_3d.translation.z.toFixed(2)) : 0,
+
+            if (!this.translation.fixedZHere) {
+                if (this.input.info && this.input.info.fp_type !== 'smd') {
+                    this.translation.fixedZHere = true;
+                    this.translation.z += parseFloat(this.model_3d.translation.z.toFixed(2));
+                }
+            }
             ki_3d_model_info = new Ki3dModel({
                 name: this.model_3d.name,
-                translation: new Ki3dModelBase({
-                    x: parseFloat(
-                        (this.model_3d.translation.x - this.input.bbox.x).toFixed(2)
-                    ),
-                    y: -parseFloat(
-                        (this.model_3d.translation.y - this.input.bbox.y).toFixed(2)
-                    ),
-                    z:
-                        this.input.info && this.input.info.fp_type === "smd"
-                            ? -parseFloat(this.model_3d.translation.z.toFixed(2))
-                            : 0,
-                }),
+                translation: this.translation,
                 rotation: new Ki3dModelBase({
                     x: (360 - this.model_3d.rotation.x) % 360,
                     y: (360 - this.model_3d.rotation.y) % 360,
@@ -590,6 +589,10 @@ class ExporterFootprintKicad {
         ki_lib += KI_FAB_REF;
 
         // ---------------------------------------
+        let minY = Infinity;
+        let maxY = -Infinity;
+        let minX = Infinity;
+        let maxX = -Infinity;
         const combinedTracks = ki.tracks.concat(ki.rectangles);
         combinedTracks.forEach(track => {
             for (let i = 0; i < track.points_start_x.length; i++) {
@@ -601,6 +604,22 @@ class ExporterFootprintKicad {
                     layers: track.layers,
                     stroke_width: track.stroke_width,
                 });
+            }
+            for (const p of track.points_start_x.concat(track.points_end_x)) {
+                if (+p > maxX) {
+                    maxX = +p;
+                }
+                if (+p < minX) {
+                    minX = +p;
+                }
+            }
+            for (const p of track.points_start_y.concat(track.points_end_y)) {
+                if (+p > maxY) {
+                    maxY = +p;
+                }
+                if (+p < minY) {
+                    minY = +p;
+                }
             }
         });
 
@@ -631,20 +650,23 @@ class ExporterFootprintKicad {
         if (ki.model_3d !== null && ki.model_3d !== undefined) {
             ki_lib += formatTemplate(KI_MODEL_3D, {
                 file_3d: `/${model_3d_path}/${ki.model_3d.name}.wrl`,
-                pos_x: ki.model_3d.translation.x,
-                pos_y: ki.model_3d.translation.y,
-                pos_z: ki.model_3d.translation.z,
+                pos_x: this.translation.x - (minX + maxX) / 2,
+                pos_y: this.translation.y - (minY + maxY) / 2,
+                pos_z: this.translation.z,
                 rot_x: ki.model_3d.rotation.x,
                 rot_y: ki.model_3d.rotation.y,
                 rot_z: ki.model_3d.rotation.z,
             });
         }
 
-        ki_lib += `(fp_rect (start 9.92 10) (end -4.18 -10)
-  (stroke (width 0.05) (type default))
-  (fill no)
-  (layer "F.CrtYd" )
-  (uuid "b62531b9-691b-4056-b99c-84be0a2405a1"))`;
+        ki_lib += formatTemplate(KI_RECT, {
+            start_x: minX - 0.5,
+            start_y: minY - 0.5,
+            end_x: maxX + 0.5,
+            end_y: maxY + 0.5,
+            layers: 'F.CrtYd',
+            stroke_width: '0.05',
+        });
 
         ki_lib += KI_END_FILE;
 

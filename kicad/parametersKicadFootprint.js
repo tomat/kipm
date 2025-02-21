@@ -27,6 +27,7 @@ const KI_CIRCLE = `\t(fp_circle (center {cx:.2f} {cy:.2f}) (end {end_x:.2f} {end
 const KI_ARC = `\t(fp_arc (start {start_x:.2f} {start_y:.2f}) (end {end_x:.2f} {end_y:.2f}) (angle {angle:.2f}) (layer {layers}) (width {stroke_width:.2f}))\n`;
 const KI_TEXT = `\t(fp_text user {text} (at {pos_x:.2f} {pos_y:.2f} {orientation:.2f}) (layer {layers}){display}\n\t\t(effects (font (size {font_size:.2f} {font_size:.2f}) (thickness {thickness:.2f})) (justify left{mirror}))\n\t)\n`;
 const KI_MODEL_3D = `\t(model "{file_3d}"\n\t\t(offset (xyz {pos_x:.3f} {pos_y:.3f} {pos_z:.3f}))\n\t\t(scale (xyz 1 1 1))\n\t\t(rotate (xyz {rot_x:.0f} {rot_y:.0f} {rot_z:.0f}))\n\t)\n`;
+const KI_RECT = `\t(fp_rect (start {start_x:.2f} {start_y:.2f}) (end {end_x:.2f} {end_y:.2f}) (layer {layers}) (width {stroke_width:.2f}))\n`;
 
 // Pad shape and layer definitions
 const KI_PAD_SHAPE = {
@@ -312,6 +313,7 @@ module.exports = {
     KI_PAD_LAYER,
     KI_PAD_LAYER_THT,
     KI_LAYERS,
+    KI_RECT,
     KiFootprintPad,
     KiFootprintTrack,
     KiFootprintHole,
