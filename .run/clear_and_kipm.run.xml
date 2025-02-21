@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="clear_and_kipm" type="NodeJSConfigurationType" path-to-js-file="../cli.js " working-dir="$PROJECT_DIR$/example-kicad-project">
+    <method v="2">
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="clear" run_configuration_type="ShConfigurationType" />
+    </method>
+  </configuration>
+</component>

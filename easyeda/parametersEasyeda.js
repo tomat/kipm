@@ -579,6 +579,7 @@ class EeFootprintRectangle {
         this.y = convertToMm(this.y);
         this.width = convertToMm(this.width);
         this.height = convertToMm(this.height);
+        this.stroke_width = convertToMm(this.stroke_width);
     }
     static get fields() {
         return ["x", "y", "width", "height", "stroke_width", "id", "layer_id", "is_locked"];
