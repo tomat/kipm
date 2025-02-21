@@ -284,10 +284,8 @@ class ExporterFootprintKicad {
             // z: this.input.info && this.input.info.fp_type === "smd" ? -parseFloat(this.model_3d.translation.z.toFixed(2)) : 0,
 
             if (!this.translation.fixedZHere) {
-                if (this.input.info && this.input.info.fp_type !== 'smd') {
-                    this.translation.fixedZHere = true;
-                    this.translation.z += parseFloat(this.model_3d.translation.z.toFixed(2));
-                }
+                this.translation.fixedZHere = true;
+                this.translation.z += parseFloat(this.model_3d.translation.z.toFixed(2));
             }
             ki_3d_model_info = new Ki3dModel({
                 name: this.model_3d.name,
@@ -614,6 +612,10 @@ class ExporterFootprintKicad {
 
         ki.pads.forEach(pad => {
             ki_lib += formatTemplate(KI_PAD, pad);
+            xPts.push(pad.pos_x + pad.width / 2);
+            xPts.push(pad.pos_x - pad.width / 2);
+            yPts.push(pad.pos_y + pad.height / 2);
+            yPts.push(pad.pos_y - pad.height / 2);
         });
 
         ki.holes.forEach(hole => {
