@@ -593,6 +593,9 @@ class ExporterFootprintKicad {
         let maxY = -Infinity;
         let minX = Infinity;
         let maxX = -Infinity;
+        let xPts = [];
+        let yPts = [];
+
         const combinedTracks = ki.tracks.concat(ki.rectangles);
         combinedTracks.forEach(track => {
             for (let i = 0; i < track.points_start_x.length; i++) {
@@ -605,22 +608,8 @@ class ExporterFootprintKicad {
                     stroke_width: track.stroke_width,
                 });
             }
-            for (const p of track.points_start_x.concat(track.points_end_x)) {
-                if (+p > maxX) {
-                    maxX = +p;
-                }
-                if (+p < minX) {
-                    minX = +p;
-                }
-            }
-            for (const p of track.points_start_y.concat(track.points_end_y)) {
-                if (+p > maxY) {
-                    maxY = +p;
-                }
-                if (+p < minY) {
-                    minY = +p;
-                }
-            }
+            xPts = xPts.concat(track.points_start_x.concat(track.points_end_x));
+            yPts = yPts.concat(track.points_start_y.concat(track.points_end_y));
         });
 
         ki.pads.forEach(pad => {
@@ -629,14 +618,31 @@ class ExporterFootprintKicad {
 
         ki.holes.forEach(hole => {
             ki_lib += formatTemplate(KI_HOLE, hole);
+
+            xPts.push(hole.center_x + hole.radius);
+            xPts.push(hole.center_x - hole.radius);
+            yPts.push(hole.center_y + hole.radius);
+            yPts.push(hole.center_y - hole.radius);
         });
 
         ki.vias.forEach(via => {
             ki_lib += formatTemplate(KI_VIA, via);
+
+            xPts.push(via.center_x + via.radius);
+            xPts.push(via.center_x - via.radius);
+            yPts.push(via.center_y + via.radius);
+            yPts.push(via.center_y - via.radius);
         });
 
         ki.circles.forEach(circle => {
             ki_lib += formatTemplate(KI_CIRCLE, circle);
+
+            const radius = (circle.cx - circle.end_x);
+
+            xPts.push(circle.cx + radius);
+            xPts.push(circle.cx - radius);
+            yPts.push(circle.cy + radius);
+            yPts.push(circle.cy - radius);
         });
 
         ki.arcs.forEach(arc => {
@@ -647,11 +653,31 @@ class ExporterFootprintKicad {
             ki_lib += formatTemplate(KI_TEXT, text);
         });
 
+        // Update max/min values
+        for (const p of xPts) {
+            if (+p > maxX) {
+                maxX = +p;
+            }
+            if (+p < minX) {
+                minX = +p;
+            }
+        }
+        for (const p of yPts) {
+            if (+p > maxY) {
+                maxY = +p;
+            }
+            if (+p < minY) {
+                minY = +p;
+            }
+        }
+
+        const hasFiniteMaxMinValues = (isFinite(minY) && isFinite(minX) && isFinite(maxY) && isFinite(maxX));
+
         if (ki.model_3d !== null && ki.model_3d !== undefined) {
             ki_lib += formatTemplate(KI_MODEL_3D, {
                 file_3d: `/${model_3d_path}/${ki.model_3d.name}.wrl`,
-                pos_x: this.translation.x - (minX + maxX) / 2,
-                pos_y: this.translation.y - (minY + maxY) / 2,
+                pos_x: this.translation.x - (hasFiniteMaxMinValues ? (minX + maxX) / 2 : 0),
+                pos_y: this.translation.y - (hasFiniteMaxMinValues ? (minY + maxY) / 2 : 0),
                 pos_z: this.translation.z,
                 rot_x: ki.model_3d.rotation.x,
                 rot_y: ki.model_3d.rotation.y,
@@ -659,14 +685,16 @@ class ExporterFootprintKicad {
             });
         }
 
-        ki_lib += formatTemplate(KI_RECT, {
-            start_x: minX - 0.5,
-            start_y: minY - 0.5,
-            end_x: maxX + 0.5,
-            end_y: maxY + 0.5,
-            layers: 'F.CrtYd',
-            stroke_width: '0.05',
-        });
+        if (hasFiniteMaxMinValues) {
+            ki_lib += formatTemplate(KI_RECT, {
+                start_x: minX - 0.5,
+                start_y: minY - 0.5,
+                end_x: maxX + 0.5,
+                end_y: maxY + 0.5,
+                layers: 'F.CrtYd',
+                stroke_width: '0.05',
+            });
+        }
 
         ki_lib += KI_END_FILE;
 
