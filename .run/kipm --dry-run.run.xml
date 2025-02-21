@@ -1,0 +1,5 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="kipm --dry-run" type="NodeJSConfigurationType" application-parameters="--dry-run" path-to-js-file="../cli.js " working-dir="$PROJECT_DIR$/example-kicad-project">
+    <method v="2" />
+  </configuration>
+</component>
