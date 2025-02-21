@@ -277,11 +277,7 @@ class ExporterFootprintKicad {
         if (this.model_3d !== null && this.model_3d !== undefined) {
             this.model_3d.convert_to_mm();
 
-            console.log('');
-            console.log('');
-            console.log('Step 4');
-            console.log('------');
-            console.log('Need to fix offset here...');
+            // @todo console.log(' Need to fix offset here...');
 
             ki_3d_model_info = new Ki3dModel({
                 name: this.model_3d.name,

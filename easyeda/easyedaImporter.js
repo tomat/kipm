@@ -2,6 +2,7 @@
 const OBJFile = require('obj-file-parser');
 
 const { EasyedaApi } = require("./easyedaApi");
+const { mat4, vec3, glMatrix, quat } = require("gl-matrix");
 const {
     EeSymbol,
     EeSymbolInfo,
@@ -300,105 +301,135 @@ class Easyeda3dModelImporter {
             if (this.downloadRaw3dModel) {
                 model_3d.raw_obj = this.lcscComponent.get3dRawObj();
                 model_3d.step = this.lcscComponent.get3dStep();
+                let transformMatrix = mat4.create(); // Identity matrix
 
-                // EasyEda transform test
-                if (false) {
-                    const isSMD = this.input.SMT;
+                const o = {
+                    "id": "d7bbe008f7644750b0331176fa9be5bf",
+                    "originX": 4196,
+                    "originY": -3147.5,
+                    "originRotation": 0,
+                    "x": -4.527699999999641,
+                    "y": 0,
+                    "z": 0,
+                    "rx": 0,
+                    "ry": 0,
+                    "rz": 90,
+                    "width": 40.1574,
+                    "height": 56.017797413,
+                    "isTop": true
+                };
+                const options = {
+                    "id": model_3d_info.uuid,
+                    //"originX": 4108.5,    # 3D model location on easyeda PCB - ignore
+                    //"originY": -3087.5,   # 3D model location on easyeda PCB - ignore
+                    //"originRotation": 0,  # 3D model location on easyeda PCB - ignore
+                    //"x": 0,
+                    //"y": 0,
+                    "z": model_3d_info.z,
+                    "rx": model_3d_info.c_rotation.split(',')[0],
+                    "ry": model_3d_info.c_rotation.split(',')[1],
+                    "rz": model_3d_info.c_rotation.split(',')[2],
+                    "width": model_3d_info.c_width,
+                    "height": model_3d_info.c_height,
+                    //"isTop": true         # 3D model location on easyeda PCB - ignore
+                }
+                const objFile = new OBJFile(model_3d.raw_obj);
+                const output = objFile.parse();
 
-                    const objFile = new OBJFile(model_3d.raw_obj);
-                    const output = objFile.parse();
+                // Calculate bbox from parsed vertices
+                const vertices = output.models[0].vertices;
+                const boundingBox = vertices.reduce((acc, vertex) => ({
+                    maxX: Math.max(acc.maxX, vertex.x),
+                    maxY: Math.max(acc.maxY, vertex.y),
+                    maxZ: Math.max(acc.maxZ, vertex.z),
+                    minX: Math.min(acc.minX, vertex.x),
+                    minY: Math.min(acc.minY, vertex.y),
+                    minZ: Math.min(acc.minZ, vertex.z)
+                }), {
+                    maxX: -Infinity,
+                    maxY: -Infinity,
+                    maxZ: -Infinity,
+                    minX: Infinity,
+                    minY: Infinity,
+                    minZ: Infinity
+                });
 
-                    // Calculate bbox from parsed vertices
-                    const vertices = output.models[0].vertices;
-                    const boundingBox = vertices.reduce((acc, vertex) => ({
-                        maxX: Math.max(acc.maxX, vertex.x),
-                        maxY: Math.max(acc.maxY, vertex.y),
-                        maxZ: Math.max(acc.maxZ, vertex.z),
-                        minX: Math.min(acc.minX, vertex.x),
-                        minY: Math.min(acc.minY, vertex.y),
-                        minZ: Math.min(acc.minZ, vertex.z)
-                    }), {
-                        maxX: -Infinity,
-                        maxY: -Infinity,
-                        maxZ: -Infinity,
-                        minX: Infinity,
-                        minY: Infinity,
-                        minZ: Infinity
-                    });
+                model_3d.boundingBox = boundingBox;
+
+                const centerX = (boundingBox.maxX + boundingBox.minX) / 2
+                  , centerY = (boundingBox.maxY + boundingBox.minY) / 2
+                  , bottomZ = boundingBox.minZ;
+
+                const translationMatrix = mat4.create();
+                mat4.translate(translationMatrix, translationMatrix,
+                  vec3.fromValues(-centerX, -centerY, -bottomZ));
+                // easyeda: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, -7.1030225, 0.014705, 1]
+                // kipm:     1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, -7.1030225, 0.014705, 1
+
+                const rotationZ = glMatrix.toRadian(options.rz);
+                const rotationX = glMatrix.toRadian(options.rx);
+                const rotationY = glMatrix.toRadian(options.ry);
+
+                const rotationMatrix = mat4.create();
+                mat4.rotateZ(rotationMatrix, rotationMatrix, rotationZ);
+                mat4.rotateX(rotationMatrix, rotationMatrix, rotationX);
+                mat4.rotateY(rotationMatrix, rotationMatrix, rotationY);
+                mat4.multiply(transformMatrix, rotationMatrix, translationMatrix);
+
+                // easyeda:  [6.1e-17, 1, 0, 0, -1, 6.1e-17, 0, 0, 0, 0, 1, 0, 7.1030225, -4.3493e-16, 0.014705, 1]
+                // kipm:      6.1e-17, 1, 0, 0, -1, 6.1e-17, 0, 0, 0, 0, 1, 0, 7.1030225, -4.3493e-16, 0.014705, 1
 
 
-                    // Step 1: Calculate center point for centering transformation
-                    const centerX = (boundingBox.maxX + boundingBox.minX) / 2;
-                    const centerY = (boundingBox.maxY + boundingBox.minY) / 2;
-                    const centerZ = boundingBox.minZ;
+                const scaleX = options.width / (boundingBox.maxX - boundingBox.minX);
+                const scaleY = options.height / (boundingBox.maxY - boundingBox.minY);
+                const uniformScale = Math.min(scaleX, scaleY);
 
-                    // Step 4: Z offset calculation based on bbox dimensions
-                    // Calculate the scaling factor based on width/height ratio
-                    const width = boundingBox.maxX - boundingBox.minX;
-                    const height = boundingBox.maxY - boundingBox.minY;
+                mat4.scale(transformMatrix, transformMatrix, vec3.fromValues(uniformScale, uniformScale, uniformScale));
+                //mat4.translate(transformMatrix, transformMatrix, vec3.fromValues(options.x, options.y, options.z));
 
 
-                    console.log('c_width:', model_3d_info.c_width);
-                    console.log('c_width_mm:', model_3d_info.c_width / 3.937);
-                    console.log('c_height:', model_3d_info.c_height / 3.937);
-                    console.log('c_origin:', model_3d_info.c_origin);
-                    console.log('z:', model_3d_info.z);
-                    console.log('-----');
-                    console.log('calculated width:', width);
-                    console.log('calculated height:', height);
+                const translation = vec3.create();
+                const rotation = quat.create();
+                const scale = vec3.create();
 
+                mat4.getTranslation(translation, transformMatrix);
+                mat4.getRotation(rotation, transformMatrix);
+                mat4.getScaling(scale, transformMatrix);
 
-                    const scaleFactor = Math.min(width / (boundingBox.maxX - boundingBox.minX),
-                        height / (boundingBox.maxY - boundingBox.minY));
+                function quatToEuler(q) {
+                    // Assuming ZXY rotation order based on your original code
+                    // q = [x, y, z, w]
 
-                    // Calculate zOffsetMils based on the bbox's z-dimension and scale factor
-                    const zOffsetMils = -boundingBox.minZ * scaleFactor;
-                    const zOffsetMm = zOffsetMils / 3.937007874;
+                    const x = q[0], y = q[1], z = q[2], w = q[3];
 
-                    // Calculate final transformations
-                    const transformation = {
-                        x: parseFloat((-centerX).toFixed(3)),
-                        y: parseFloat((-centerY).toFixed(3)),
-                        z: isSMD ?
-                            parseFloat((-centerZ + zOffsetMm).toFixed(3)) :
-                            parseFloat((-centerZ).toFixed(3))
+                    // ZXY rotation order
+                    const rotX = Math.atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y)) * 180 / Math.PI;
+                    const rotY = Math.asin(Math.max(-1, Math.min(1, 2 * (w * y - z * x)))) * 180 / Math.PI;
+                    const rotZ = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)) * 180 / Math.PI;
+
+                    // Normalize to 0-360
+                    return {
+                        x: ((rotX % 360) + 360) % 360,
+                        y: ((rotY % 360) + 360) % 360,
+                        z: ((rotZ % 360) + 360) % 360
                     };
-
-                    // Log the calculations
-                    console.log('\nBounding Box:', boundingBox);
-                    console.log('Step 1 - Center point:', {
-                        x: centerX.toFixed(3),
-                        y: centerY.toFixed(3),
-                        z: centerZ.toFixed(3)
-                    });
-                    console.log('Step 4 - Position offset:', {
-                        zOffsetMils: zOffsetMils,
-                        zOffsetMm: zOffsetMm.toFixed(3)
-                    });
-
-                    console.log('Final transformation values:', transformation);
-                    console.log('');
                 }
 
+                const rotationDegrees = quatToEuler(rotation);
+
+                rotationDegrees.x = ((rotationDegrees.x % 360) + 360) % 360;
+                rotationDegrees.y = ((rotationDegrees.y % 360) + 360) % 360;
+                rotationDegrees.z = ((rotationDegrees.z % 360) + 360) % 360;
+
+                console.log("Translation (x, y, z):");
+                console.log(`x: ${translation[0].toFixed(2)}, y: ${translation[1].toFixed(2)}, z: ${translation[2].toFixed(2)}`);
+
+                console.log("Rotation (degrees, x, y, z):");
+                console.log(`x: ${rotationDegrees.x.toFixed(2)}, y: ${rotationDegrees.y.toFixed(2)}, z: ${rotationDegrees.z.toFixed(2)}`);
+
+                const a = 1;
+
             }
-            console.log('Step 2 - translation values on model_3d:', );
-
-            console.log('');
-            console.log('');
-            console.log('Step 2');
-            console.log('------');
-            console.log('Variable: "model_3d", in easyedaImporter.js');
-            console.log('Source: "info" variable from step 1');
-
-            console.log(JSON.stringify(
-                {
-                    'model_3d.translation.x': model_3d.translation.x,
-                    'model_3d.translation.y': model_3d.translation.y,
-                    'model_3d.translation.z': model_3d.translation.z
-                },
-                null,
-                2
-            ));
 
             return model_3d;
         }
@@ -418,25 +449,6 @@ class Easyeda3dModelImporter {
     }
 
     parse_3d_model_info(info) {
-        console.log('');
-        console.log('');
-        console.log('Step 1');
-        console.log('------');
-        console.log('Variable: "info", in easyedaImporter.js');
-        console.log('Source: from input.packageDetail.dataStr.shape (SVGNODE~{"gId":"g1_outline"[...])');
-
-        console.log(JSON.stringify(
-            {
-                'info.c_origin[0]': info.c_origin.split(',')[0],
-                'info.c_origin[1]': info.c_origin.split(',')[1],
-                'info.z': info.z,
-                'info.c_width': info.c_width,
-                'info.c_height': info.c_height
-            },
-            null,
-            2
-        ));
-
         return new Ee3dModel({
             name: info.title,
             uuid: info.uuid,
