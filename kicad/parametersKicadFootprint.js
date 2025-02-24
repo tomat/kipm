@@ -182,7 +182,7 @@ class KiFootprintArc {
 
     getBoundingBox() {
         // For nearly complete circles
-        if (Math.abs(this.angle) >= 359) {
+        if (Math.abs(this.angle) >= 359 && Math.abs(this.start_y) === 0) {
             const centerX = this.start_x;  // center is at start_x
             const centerY = 0;             // center is at y=0
             const radius = Math.abs(this.end_y);  // radius is the distance to end_y
@@ -216,13 +216,10 @@ class KiFootprintArc {
         // Check intermediate points if arc crosses 0°, 90°, 180°, or 270°
         // TODO: Add logic for partial arcs if needed
 
-        // Account for stroke width
-        const halfStroke = this.stroke_width / 2;
-
-        let minX = Math.min(...points.map(p => p[0])) - halfStroke;
-        let maxX = Math.max(...points.map(p => p[0])) + halfStroke;
-        let minY = Math.min(...points.map(p => p[1])) - halfStroke;
-        let maxY = Math.max(...points.map(p => p[1])) + halfStroke;
+        let minX = Math.min(...points.map(p => p[0]));
+        let maxX = Math.max(...points.map(p => p[0]));
+        let minY = Math.min(...points.map(p => p[1]));
+        let maxY = Math.max(...points.map(p => p[1]));
 
         return {
             min_x: minX,
