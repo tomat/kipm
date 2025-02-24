@@ -649,6 +649,13 @@ class ExporterFootprintKicad {
 
         ki.arcs.forEach(arc => {
             ki_lib += formatTemplate(KI_ARC, arc);
+
+            const bbox = arc.getBoundingBox();
+
+            xPts.push(bbox.max_x);
+            xPts.push(bbox.min_x);
+            yPts.push(bbox.max_y);
+            yPts.push(bbox.min_y);
         });
 
         ki.texts.forEach(text => {
@@ -678,7 +685,7 @@ class ExporterFootprintKicad {
         if (ki.model_3d !== null && ki.model_3d !== undefined) {
             ki_lib += formatTemplate(KI_MODEL_3D, {
                 file_3d: `/${model_3d_path}/${ki.model_3d.name}.wrl`,
-                pos_x: this.translation.x - (hasFiniteMaxMinValues ? (minX + maxX) / 2 : 0),
+                pos_x: this.translation.x + (hasFiniteMaxMinValues ? (minX + maxX) / 2 : 0),
                 pos_y: this.translation.y - (hasFiniteMaxMinValues ? (minY + maxY) / 2 : 0),
                 pos_z: this.translation.z,
                 rot_x: ki.model_3d.rotation.x,

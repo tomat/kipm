@@ -179,6 +179,58 @@ class KiFootprintArc {
         this.stroke_width = stroke_width;
         roundFloatValues(this);
     }
+
+    getBoundingBox() {
+        // For nearly complete circles
+        if (Math.abs(this.angle) >= 359) {
+            const centerX = this.start_x;  // center is at start_x
+            const centerY = 0;             // center is at y=0
+            const radius = Math.abs(this.end_y);  // radius is the distance to end_y
+
+            // Account for stroke width
+            const totalRadius = radius + this.stroke_width / 2;
+
+            return {
+                min_x: centerX - totalRadius,
+                max_x: centerX + totalRadius,
+                min_y: centerY - totalRadius,
+                max_y: centerY + totalRadius
+            };
+        }
+
+        // For partial arcs
+        const dx = this.end_x - this.start_x;
+        const dy = this.end_y - this.start_y;
+        const angleRad = (this.angle / 10) * Math.PI / 180;
+
+        // Calculate center of arc using start and end points and angle
+        const chord = Math.sqrt(dx * dx + dy * dy);
+        const radius = chord / (2 * Math.sin(angleRad / 2));
+
+        // Find all extreme points
+        const points = [
+            [this.start_x, this.start_y],
+            [this.end_x, this.end_y]
+        ];
+
+        // Check intermediate points if arc crosses 0°, 90°, 180°, or 270°
+        // TODO: Add logic for partial arcs if needed
+
+        // Account for stroke width
+        const halfStroke = this.stroke_width / 2;
+
+        let minX = Math.min(...points.map(p => p[0])) - halfStroke;
+        let maxX = Math.max(...points.map(p => p[0])) + halfStroke;
+        let minY = Math.min(...points.map(p => p[1])) - halfStroke;
+        let maxY = Math.max(...points.map(p => p[1])) + halfStroke;
+
+        return {
+            min_x: minX,
+            max_x: maxX,
+            min_y: minY,
+            max_y: maxY
+        };
+    }
 }
 
 // TEXT
