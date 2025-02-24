@@ -641,10 +641,12 @@ class ExporterFootprintKicad {
 
             const radius = (circle.cx - circle.end_x);
 
-            xPts.push(circle.cx + radius);
-            xPts.push(circle.cx - radius);
-            yPts.push(circle.cy + radius);
-            yPts.push(circle.cy - radius);
+            if (radius > 1) {
+                xPts.push(circle.cx + radius);
+                xPts.push(circle.cx - radius);
+                yPts.push(circle.cy + radius);
+                yPts.push(circle.cy - radius);
+            }
         });
 
         ki.arcs.forEach(arc => {
@@ -652,10 +654,12 @@ class ExporterFootprintKicad {
 
             const bbox = arc.getBoundingBox();
 
-            xPts.push(bbox.max_x);
-            xPts.push(bbox.min_x);
-            yPts.push(bbox.max_y);
-            yPts.push(bbox.min_y);
+            if (bbox.max_x - bbox.min_x > 2 && bbox.max_y - bbox.min_y > 2) {
+                xPts.push(bbox.max_x);
+                xPts.push(bbox.min_x);
+                yPts.push(bbox.max_y);
+                yPts.push(bbox.min_y);
+            }
         });
 
         ki.texts.forEach(text => {
@@ -695,11 +699,12 @@ class ExporterFootprintKicad {
         }
 
         if (hasFiniteMaxMinValues) {
+            const margin = 0.5;
             ki_lib += formatTemplate(KI_RECT, {
-                start_x: minX - 0.5,
-                start_y: minY - 0.5,
-                end_x: maxX + 0.5,
-                end_y: maxY + 0.5,
+                start_x: minX - margin,
+                start_y: minY - margin,
+                end_x: maxX + margin,
+                end_y: maxY + margin,
                 layers: 'F.CrtYd',
                 stroke_width: '0.05',
             });
