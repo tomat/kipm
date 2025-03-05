@@ -403,11 +403,11 @@ class Easyeda3dModelImporter {
                 rotationDegrees.y = ((rotationDegrees.y % 360) + 360) % 360;
                 rotationDegrees.z = ((rotationDegrees.z % 360) + 360) % 360;
 
-                console.log("Translation (x, y, z):");
-                console.log(`x: ${translation[0].toFixed(2)}, y: ${translation[1].toFixed(2)}, z: ${translation[2].toFixed(2)}`);
+                // console.log("Translation (x, y, z):");
+                // console.log(`x: ${translation[0].toFixed(2)}, y: ${translation[1].toFixed(2)}, z: ${translation[2].toFixed(2)}`);
 
-                console.log("Rotation (degrees, x, y, z):");
-                console.log(`x: ${rotationDegrees.x.toFixed(2)}, y: ${rotationDegrees.y.toFixed(2)}, z: ${rotationDegrees.z.toFixed(2)}`);
+                // console.log("Rotation (degrees, x, y, z):");
+                // console.log(`x: ${rotationDegrees.x.toFixed(2)}, y: ${rotationDegrees.y.toFixed(2)}, z: ${rotationDegrees.z.toFixed(2)}`);
 
                 this.lcscComponent.translation.x += +translation[0].toFixed(2);
                 this.lcscComponent.translation.y += +translation[1].toFixed(2);
@@ -416,7 +416,9 @@ class Easyeda3dModelImporter {
 
             return model_3d;
         }
+
         console.warn("No 3D model available for this component");
+
         return null;
     }
 
